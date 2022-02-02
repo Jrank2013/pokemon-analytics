@@ -1,15 +1,16 @@
 import Layout from '../../components/layout'
 import {Badge, Tab, Table, Tabs} from "react-bootstrap";
 import axios from "axios";
+import Image from "next/image"
 
-export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding}) {
+export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
     return (<Layout>
 
         <h1 className={"text-capitalize"}>{pokemon.name}</h1>
 
         <div className="flex flex-row ">
             <div>
-                <img src={pokemon.sprites.other['official-artwork'].front_default}
+                <Image src={pokemon.sprites.other['official-artwork'].front_default}
                      alt={`Official artwork for ${pokemon.name}`}/>
                 {pokemon.types.map(type => <Badge key={type.type.name} pill color="light"
                                                   className="color: black; text-transform: capitalize">{type.type.name}</Badge>)}
@@ -47,7 +48,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding}) {
                         <p className="text-capitalize font-bold">{ability.name}
                             {
                                 ability.pokemon.find(pokemonWithAbility => pokemonWithAbility.pokemon.name === pokemon.name).is_hidden === true
-                                && <small className="text-lowercase font-italic">hidden</small>
+                                && <small className="text-lowercase font-normal italic"> hidden</small>
                             }
 
                         </p>
@@ -67,6 +68,11 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding}) {
             <Tab title="By Breeding" eventKey="byBreeding">
                 <ul>
                     {movesByBreeding.map(move => <li key={move.name}>{move.name}</li>)}
+                </ul>
+            </Tab>
+            <Tab title="By TM" eventKey="byTM">
+                <ul>
+                    {movesByTM.map(move => <li key={move.name}>{move.name}</li>)}
                 </ul>
             </Tab>
         </Tabs>
@@ -95,11 +101,13 @@ export const getStaticProps = async ({params}) => {
 
     const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0)
     const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg').length > 0)
+    const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0)
     return {
         props: {
             pokemon: {...response.data, abilities},
             movesByLevelUp,
-            movesByBreeding
+            movesByBreeding,
+            movesByTM,
         }
     };
 }
@@ -122,6 +130,6 @@ export const getStaticPaths = async () => {
 
     return {
         paths: pokemon.map(pokemon => ({params: {...pokemon}})),
-        fallback: false
+        fallback: true
     }
 }
