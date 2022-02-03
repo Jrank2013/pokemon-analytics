@@ -4,7 +4,6 @@ import Image from "next/image"
 import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
-import http from "../../lib/http";
 
 
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
@@ -101,18 +100,18 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
 export const getStaticProps = async ({params}) => {
 
-    const response = await http.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
+    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
 
     const abilities = await Promise.all(
         response.data.abilities.map(async ({ability}) => {
-            const response = await http.get(ability.url);
+            const response = await axios.get(ability.url);
             return response.data;
         }),
     );
 
     const moves = await Promise.all(
         response.data.moves.map(async ({move, version_group_details}) => {
-            const response = await http.get(move.url);
+            const response = await axios.get(move.url);
             return {...response.data, version_group_details};
         }),
     );
@@ -142,7 +141,7 @@ export const getStaticPaths = async () => {
     let url = 'https://pokeapi.co/api/v2/pokemon?limit=200';
 
     do {
-        response = await http.get(url);
+        response = await axios.get(url);
         if (response.status !== 200) {
             throw Error(`api raised ${response.status} ${response.statusText}`);
         }
