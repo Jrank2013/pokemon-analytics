@@ -101,7 +101,6 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
 export const getStaticProps = async ({params}) => {
 
-    console.log(params)
     const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
 
     const abilities = await Promise.all(
@@ -119,7 +118,7 @@ export const getStaticProps = async ({params}) => {
     );
 
     const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0)
-    const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg').length > 0)
+    const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0)
     const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0)
     return {
         props: {
