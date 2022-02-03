@@ -1,10 +1,10 @@
 import Layout from '../../components/layout'
-import axios from "axios";
 import Image from "next/image"
 
 import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
+import http from "../../lib/http";
 
 
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
@@ -12,7 +12,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
         {moves: movesByLevelUp, label: "By Level Up"},
         {moves: movesByBreeding, label: "By Level Breeding"},
         {moves: movesByTM, label: "By TM"},
-    ].filter(tab => tab.moves.length > 0)
+    ].filter(tab => tab.moves?.length ?? 0 > 0)
 
     const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
 
@@ -101,18 +101,18 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
 export const getStaticProps = async ({params}) => {
 
-    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
+    const response = await http.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
 
     const abilities = await Promise.all(
         response.data.abilities.map(async ({ability}) => {
-            const response = await axios.get(ability.url);
+            const response = await http.get(ability.url);
             return response.data;
         }),
     );
 
     const moves = await Promise.all(
         response.data.moves.map(async ({move, version_group_details}) => {
-            const response = await axios.get(move.url);
+            const response = await http.get(move.url);
             return {...response.data, version_group_details};
         }),
     );
@@ -120,6 +120,11 @@ export const getStaticProps = async ({params}) => {
     const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0)
     const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0)
     const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0)
+
+    if (!response.data.name) {
+        console.log(response.data)
+    }
+
     return {
         props: {
             pokemon: {...response.data, abilities},
@@ -137,7 +142,7 @@ export const getStaticPaths = async () => {
     let url = 'https://pokeapi.co/api/v2/pokemon?limit=200';
 
     do {
-        response = await axios.get(url);
+        response = await http.get(url);
         if (response.status !== 200) {
             throw Error(`api raised ${response.status} ${response.statusText}`);
         }
@@ -148,6 +153,6 @@ export const getStaticPaths = async () => {
 
     return {
         paths: pokemon.map(pokemon => ({params: {...pokemon}})),
-        fallback: true
+        fallback: false
     }
 }
