@@ -4,6 +4,7 @@ import Image from "next/image"
 import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
+import axios from "axios";
 
 
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
