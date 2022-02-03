@@ -1,44 +1,63 @@
 import Layout from '../../components/layout'
-import {Badge, Tab, Table, Tabs} from "react-bootstrap";
 import axios from "axios";
 import Image from "next/image"
 
+import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs} from '@mui/material';
+import * as React from "react";
+import {useState} from "react";
+
+
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
+    const tabs = [
+        {moves: movesByLevelUp, label: "By Level Up"},
+        {moves: movesByBreeding, label: "By Level Breeding"},
+        {moves: movesByTM, label: "By TM"},
+    ].filter(tab => tab.moves.length > 0)
+
+    const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
+
+    const handleMoveTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setCurrentMoveTab(newValue);
+    };
+
     return (<Layout>
 
         <h1 className={"text-capitalize"}>{pokemon.name}</h1>
 
         <div className="flex flex-row ">
             <div>
-                <Image src={pokemon.sprites.other['official-artwork'].front_default}
-                     alt={`Official artwork for ${pokemon.name}`}/>
-                {pokemon.types.map(type => <Badge key={type.type.name} pill color="light"
-                                                  className="color: black; text-transform: capitalize">{type.type.name}</Badge>)}
+                <Image width={500} height={500} src={pokemon.sprites.other['official-artwork'].front_default}
+                       alt={`Official artwork for ${pokemon.name}`}/>
+                <Stack direction="row" spacing={1}>
+                    {pokemon.types.map(type => <Chip key={type.type.name} color="primary"
+                                                     label={type.type.name}/>)}
+                </Stack>
 
 
             </div>
             <Table>
-                <thead>
-                <tr>
-                    <th>Stat</th>
-                    <th>Base</th>
-                </tr>
-                </thead>
-                <tbody>
-                {
-                    pokemon.stats.map(stat => {
-                        return (
-                            <tr key={stat.stat.name}>
-                                <td className="text-transform: capitalize">{stat.stat.name.replace("-", " ")}</td>
-                                <td>{stat.base_stat}</td>
-                            </tr>
-                        )
-                    })
-                }
-                </tbody>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Stat</TableCell>
+                        <TableCell>Base</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {
+                        pokemon.stats.map(stat => {
+                            return (
+                                <TableRow key={stat.stat.name}>
+                                    <TableCell
+                                        className="text-transform: capitalize">{stat.stat.name.replace("-", " ")}</TableCell>
+                                    <TableCell>{stat.base_stat}</TableCell>
+                                </TableRow>
+                            )
+                        })
+                    }
+                </TableBody>
             </Table>
         </div>
-        <hr/>
+        <br/>
 
         <h2>Abilities</h2>
         <ul>
@@ -59,23 +78,23 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
 
         <h2>Moves</h2>
-        <Tabs>
-            <Tab title="By Level Up" eventKey="byLevelUp">
-                <ul>
-                    {movesByLevelUp.map(move => <li key={move.name}>{move.name}</li>)}
-                </ul>
-            </Tab>
-            <Tab title="By Breeding" eventKey="byBreeding">
-                <ul>
-                    {movesByBreeding.map(move => <li key={move.name}>{move.name}</li>)}
-                </ul>
-            </Tab>
-            <Tab title="By TM" eventKey="byTM">
-                <ul>
-                    {movesByTM.map(move => <li key={move.name}>{move.name}</li>)}
-                </ul>
-            </Tab>
-        </Tabs>
+        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+            <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
+                {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
+            </Tabs>
+        </Box>
+        <Box>
+            <ul>
+                {
+                    tabs[currentMoveTab].moves.map(move => (
+                        <li key={move.name}>
+                            <p>{move.name}</p>
+                        </li>)
+                    )
+                }
+            </ul>
+        </Box>
+
     </Layout>)
 }
 
