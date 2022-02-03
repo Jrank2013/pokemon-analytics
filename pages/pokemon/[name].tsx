@@ -1,10 +1,10 @@
 import Layout from '../../components/layout'
 import Image from "next/image"
 
-import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs} from '@mui/material';
+import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, Typography} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
-import axios from "axios";
+import {getAbility, getAllPokemon, getMove, getPokemon} from "../../lib/api";
 
 
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
@@ -22,7 +22,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
     return (<Layout>
 
-        <h1 className={"text-capitalize"}>{pokemon.name}</h1>
+        <Typography variant="h1" sx={{textTransform: 'capitalize'}}>{pokemon.name}</Typography>
 
         <div className="flex flex-row ">
             <div>
@@ -59,25 +59,25 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
         </div>
         <br/>
 
-        <h2>Abilities</h2>
+        <Typography variant={"h2"}>Abilities</Typography>
         <ul>
             {pokemon.abilities.map((ability) => {
                 return (
                     <li key={ability.name}>
-                        <p className="text-capitalize font-bold">{ability.name}
+                        <Box sx={{display: 'flex', flexDirection: 'row'}}>
+                            <Typography variant={'h3'} className="text-capitalize font-bold">{ability.name}</Typography>
                             {
                                 ability.pokemon.find(pokemonWithAbility => pokemonWithAbility.pokemon.name === pokemon.name).is_hidden === true
                                 && <small className="text-lowercase font-normal italic"> hidden</small>
                             }
-
-                        </p>
+                        </Box>
                         <p>{ability.effect_entries.find(entry => entry.language.name === "en").short_effect}</p>
                     </li>)
             })}
         </ul>
 
 
-        <h2>Moves</h2>
+        <Typography variant={"h2"}>Moves</Typography>
         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
             <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
                 {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
@@ -101,33 +101,29 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 
 export const getStaticProps = async ({params}) => {
 
-    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${params.name}`);
+    const pokemon = getPokemon(params.name)
 
     const abilities = await Promise.all(
-        response.data.abilities.map(async ({ability}) => {
-            const response = await axios.get(ability.url);
-            return response.data;
+        pokemon.abilities.map(async ({ability}) => {
+            return getAbility(ability.name)
         }),
     );
 
-    const moves = await Promise.all(
-        response.data.moves.map(async ({move, version_group_details}) => {
-            const response = await axios.get(move.url);
-            return {...response.data, version_group_details};
-        }),
-    );
+    const moves = pokemon.moves.map(({move, version_group_details}) => {
+        return {...getMove(move.name), version_group_details}
+    })
 
     const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0)
     const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0)
     const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0)
 
-    if (!response.data.name) {
-        console.log(response.data)
+    if (!pokemon.name) {
+        console.log(pokemon)
     }
 
     return {
         props: {
-            pokemon: {...response.data, abilities},
+            pokemon: {...pokemon, abilities},
             movesByLevelUp,
             movesByBreeding,
             movesByTM,
@@ -136,21 +132,7 @@ export const getStaticProps = async ({params}) => {
 }
 
 export const getStaticPaths = async () => {
-
-    const pokemon = [];
-    let response;
-    let url = 'https://pokeapi.co/api/v2/pokemon?limit=200';
-
-    do {
-        response = await axios.get(url);
-        if (response.status !== 200) {
-            throw Error(`api raised ${response.status} ${response.statusText}`);
-        }
-        pokemon.push(...response.data.results);
-        url = response.data?.next ?? '';
-    } while (url !== '');
-
-
+    const pokemon = getAllPokemon()
     return {
         paths: pokemon.map(pokemon => ({params: {...pokemon}})),
         fallback: false
