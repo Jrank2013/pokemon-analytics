@@ -67,8 +67,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
     }
 
     function onMovesPerRowChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-        console.log(event)
-        setMovesPerPage(event.target.value)
+        setMovesPerPage(parseInt(event.target.value))
 
     }
 
