@@ -1,3 +1,0 @@
-[submodule "api-data"]
-	path = api-data
-	url = https://github.com/PokeAPI/api-data.git
