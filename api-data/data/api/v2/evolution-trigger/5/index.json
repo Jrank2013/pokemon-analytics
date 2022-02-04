@@ -1,0 +1,14 @@
+{
+    "id": 5,
+    "name": "spin",
+    "names": [
+        {
+            "language": {
+                "name": "en",
+                "url": "/api/v2/language/9/"
+            },
+            "name": "Spin"
+        }
+    ],
+    "pokemon_species": []
+}
