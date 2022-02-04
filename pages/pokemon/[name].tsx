@@ -2,7 +2,21 @@ import Layout from '../../components/layout'
 import Image from "next/image"
 import Head from "next/head";
 
-import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, Typography} from '@mui/material';
+import {
+    Box,
+    Chip,
+    Stack,
+    Tab,
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TablePagination,
+    TableRow,
+    Tabs,
+    Typography
+} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
 import {getAbility, getMove, getPokemon, pokemon} from "../../lib/api";
@@ -38,11 +52,25 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
         {moves: movesByTM, label: "By TM"},
     ].filter(tab => tab.moves?.length ?? 0 > 0)
 
+
     const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
+    const [currentMoveTablePage, setCurrentMoveTablePage] = useState<number>(0)
+    const [movesPerPage, setMovesPerPage] = useState<number>(10)
 
     const handleMoveTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentMoveTab(newValue);
+        setCurrentMoveTablePage(0)
     };
+
+    function onTablePageChange(event: React.SyntheticEvent, newValue: number) {
+        setCurrentMoveTablePage(newValue)
+    }
+
+    function onMovesPerRowChange(event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        console.log(event)
+        setMovesPerPage(event.target.value)
+
+    }
 
     return (
         <Layout>
@@ -132,12 +160,14 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                     </Box>
                     <Table>
                         <TableHead>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Type</TableCell>
-                            <TableCell>Type</TableCell>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell>Type</TableCell>
+                            </TableRow>
                         </TableHead>
                         <TableBody>
-                            {tabs[currentMoveTab].moves.map(move => {
+                            {tabs[currentMoveTab].moves.slice(currentMoveTablePage * movesPerPage, movesPerPage * (currentMoveTablePage + 1)).map(move => {
                                     const moveEntry = move.effect_entries.find(entry => entry.language.name === "en") || move.flavor_text_entries.find(entry => entry.language.name === "en");
                                     const moveName = titleCase(move.name.replace('-', " "));
 
@@ -157,6 +187,14 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                                 }
                             )}
                         </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TablePagination count={tabs[currentMoveTab].moves.length} page={currentMoveTablePage}
+                                                 onPageChange={onTablePageChange}
+                                                 rowsPerPage={movesPerPage}
+                                                 onRowsPerPageChange={onMovesPerRowChange}/>
+                            </TableRow>
+                        </TableFooter>
                     </Table>
                 </>)
                 : <p>Sorry no data at this time</p>
