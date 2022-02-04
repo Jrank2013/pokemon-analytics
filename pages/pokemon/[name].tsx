@@ -4,13 +4,14 @@ import Image from "next/image"
 import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, Typography} from '@mui/material';
 import * as React from "react";
 import {useState} from "react";
-import {getAbility, getAllPokemon, getMove, getPokemon} from "../../lib/api";
+import {getAbility, getMove, getPokemon, pokemon} from "../../lib/api";
+
 
 
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
     const tabs = [
         {moves: movesByLevelUp, label: "By Level Up"},
-        {moves: movesByBreeding, label: "By Level Breeding"},
+        {moves: movesByBreeding, label: "By Breeding"},
         {moves: movesByTM, label: "By TM"},
     ].filter(tab => tab.moves?.length ?? 0 > 0)
 
@@ -62,6 +63,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
         <Typography variant={"h2"}>Abilities</Typography>
         <ul>
             {pokemon.abilities.map((ability) => {
+                const ability_entry = ability.effect_entries.find(entry => entry.language.name === "en") || ability.flavor_text_entries.find(entry => entry.language.name === "en");
                 return (
                     <li key={ability.name}>
                         <Box sx={{display: 'flex', flexDirection: 'row'}}>
@@ -71,30 +73,29 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                                 && <small className="text-lowercase font-normal italic"> hidden</small>
                             }
                         </Box>
-                        <p>{ability.effect_entries.find(entry => entry.language.name === "en").short_effect}</p>
+                        <p>{ability_entry?.short_effect}</p>
                     </li>)
             })}
         </ul>
 
 
         <Typography variant={"h2"}>Moves</Typography>
-        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-            <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
-                {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
-            </Tabs>
-        </Box>
-        <Box>
-            <ul>
-                {
-                    tabs[currentMoveTab].moves.map(move => (
+        {tabs.length > 0 ?
+            (<><Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
+                    {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
+                </Tabs>
+            </Box><Box>
+                <ul>
+                    {tabs[currentMoveTab].moves.map(move => (
                         <li key={move.name}>
                             <p>{move.name}</p>
                         </li>)
-                    )
-                }
-            </ul>
-        </Box>
-
+                    )}
+                </ul>
+            </Box></>)
+            : <p>Sorry no data at this time</p>
+        }
     </Layout>)
 }
 
@@ -109,13 +110,13 @@ export const getStaticProps = async ({params}) => {
         }),
     );
 
-    const moves = pokemon.moves.map(({move, version_group_details}) => {
+    const moves = pokemon?.moves.map(({move, version_group_details}) => {
         return {...getMove(move.name), version_group_details}
-    })
+    }) ?? []
 
-    const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0)
-    const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0)
-    const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0)
+    const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0) || []
+    const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0) || []
+    const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0) || []
 
     if (!pokemon.name) {
         console.log(pokemon)
@@ -132,9 +133,8 @@ export const getStaticProps = async ({params}) => {
 }
 
 export const getStaticPaths = async () => {
-    const pokemon = getAllPokemon()
     return {
-        paths: pokemon.map(pokemon => ({params: {...pokemon}})),
+        paths: pokemon.filter(pokemon => pokemon.is_default).map(pokemon => ({params: {name: pokemon.name}})),
         fallback: false
     }
 }

@@ -3,7 +3,7 @@ import * as fs from "fs";
 
 const dataDirectory = path.join(process.cwd(), "api-data/data/")
 
-export const getAllPokemon = () => {
+const getAllPokemon = () => {
     const pokemonLocations = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'api/v2/pokemon/index.json'), {encoding: 'utf-8'})).results
 
     return pokemonLocations.map(location => {
@@ -12,11 +12,13 @@ export const getAllPokemon = () => {
     })
 }
 
+export const pokemon = getAllPokemon()
+
 export const getPokemon = (name: string) => {
-    return getAllPokemon().find((pokemon) => pokemon.name === name)
+    return pokemon.find((pokemon) => pokemon.name === name)
 }
 
-export const getAllMoves = () => {
+const getAllMoves = () => {
     const moveLocations = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'api/v2/move/index.json'), {encoding: 'utf-8'})).results
 
     return moveLocations.map(location => {
@@ -25,11 +27,13 @@ export const getAllMoves = () => {
     })
 }
 
+export const moves = getAllMoves()
+
 export const getMove = (name: string) => {
-    return getAllMoves().find((move) => move.name === name)
+    return moves.find((move) => move.name === name)
 }
 
-export const getAllAbilities = () => {
+const getAllAbilities = () => {
     const abilityLocations = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'api/v2/ability/index.json'), {encoding: 'utf-8'})).results
 
     return abilityLocations.map(location => {
@@ -38,6 +42,8 @@ export const getAllAbilities = () => {
     })
 }
 
+export const abilities = getAllAbilities();
+
 export const getAbility = (name: string) => {
-    return getAllAbilities().find(ability => ability.name === name)
+    return abilities.find(ability => ability.name === name)
 }
