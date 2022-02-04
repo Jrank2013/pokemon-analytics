@@ -1,5 +1,6 @@
 import Layout from '../../components/layout'
 import Image from "next/image"
+import Head from "next/head";
 
 import {Box, Chip, Stack, Tab, Table, TableBody, TableCell, TableHead, TableRow, Tabs, Typography} from '@mui/material';
 import * as React from "react";
@@ -7,7 +8,29 @@ import {useState} from "react";
 import {getAbility, getMove, getPokemon, pokemon} from "../../lib/api";
 
 
+import titleCase from 'voca/title_case'
 
+
+const typeColors = {
+    'fire': '#fd7d24',
+    'fairy': '#fdb9e9',
+    'grass': '#9bcc50',
+    "normal": "#a4acaf",
+    "fighting": "#d56723",
+    "flying": "#3dc7ef",
+    "poison": "#b97fc9",
+    "ground": "#53a3cf",
+    "rock": "#a38c21",
+    "bug": "#729f3f",
+    "ghost": "#7b62a3",
+    "steel": "#9eb7b8",
+    "water": "#4592c4",
+    "electric": "#eed535",
+    "psychic": "#f366b9",
+    "ice": "#51c4e7",
+    "dragon": "#53a3cf",
+    "dark": "#707070",
+}
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
     const tabs = [
         {moves: movesByLevelUp, label: "By Level Up"},
@@ -21,82 +44,125 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
         setCurrentMoveTab(newValue);
     };
 
-    return (<Layout>
+    return (
+        <Layout>
+            <Head>
+                <title>{titleCase(pokemon.name)}</title>
+            </Head>
 
-        <Typography variant="h1" sx={{textTransform: 'capitalize'}}>{pokemon.name}</Typography>
+            <Typography variant="h1" sx={{textTransform: 'capitalize'}}>{pokemon.name}</Typography>
 
-        <div className="flex flex-row ">
-            <div>
-                <Image width={500} height={500} src={pokemon.sprites.other['official-artwork'].front_default}
-                       alt={`Official artwork for ${pokemon.name}`}/>
-                <Stack direction="row" spacing={1}>
-                    {pokemon.types.map(type => <Chip key={type.type.name} color="primary"
-                                                     label={type.type.name}/>)}
-                </Stack>
+            <div className="flex flex-row ">
+                <div>
+                    <Image width={500} height={500} src={pokemon.sprites.other['official-artwork'].front_default}
+                           alt={`Official artwork for ${pokemon.name}`}/>
+                    <Stack direction="row" spacing={1}>
+                        {
+                            pokemon.types.map(type => (
+                                    <Chip key={type.type.name} color="primary" label={titleCase(type.type.name)}
+                                          sx={{backgroundColor: typeColors[type.type.name]}}/>
+                                )
+                            )}
+                    </Stack>
 
 
+                </div>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Stat</TableCell>
+                            <TableCell>Base</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {
+                            pokemon.stats.map(stat => {
+                                return (
+                                    <TableRow key={stat.stat.name}>
+                                        <TableCell>{titleCase(stat.stat.name.replace("-", " "))}</TableCell>
+                                        <TableCell>{stat.base_stat}</TableCell>
+                                    </TableRow>
+                                )
+                            })
+                        }
+                    </TableBody>
+                </Table>
             </div>
+            <br/>
+
+            <Typography variant={"h2"}>Abilities</Typography>
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Stat</TableCell>
-                        <TableCell>Base</TableCell>
+                        <TableCell>Name</TableCell>
+                        <TableCell>Effect</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {
-                        pokemon.stats.map(stat => {
-                            return (
-                                <TableRow key={stat.stat.name}>
-                                    <TableCell
-                                        className="text-transform: capitalize">{stat.stat.name.replace("-", " ")}</TableCell>
-                                    <TableCell>{stat.base_stat}</TableCell>
-                                </TableRow>
-                            )
-                        })
-                    }
+                    {pokemon.abilities.map((ability) => {
+                        const abilityEntry = ability.effect_entries.find(entry => entry.language.name === "en") || ability.flavor_text_entries.find(entry => entry.language.name === "en");
+                        const abilityName = titleCase(ability.name.replace('-', " "));
+                        const isHiddenAbility = ability.pokemon.find(pokemonWithAbility => pokemonWithAbility.pokemon.name === pokemon.name).is_hidden === true;
+
+                        return (
+                            <TableRow key={ability.name}>
+                                <TableCell>
+                                    <Box sx={{display: 'inline'}}>
+                                        <Typography variant={'h6'}>{abilityName}</Typography>
+                                        {isHiddenAbility && <Typography variant={'overline'}> hidden</Typography>}
+                                    </Box>
+                                </TableCell>
+                                <TableCell>
+                                    <p>{abilityEntry?.short_effect}</p>
+                                </TableCell>
+                            </TableRow>
+                        )
+                    })}
                 </TableBody>
             </Table>
-        </div>
-        <br/>
-
-        <Typography variant={"h2"}>Abilities</Typography>
-        <ul>
-            {pokemon.abilities.map((ability) => {
-                const ability_entry = ability.effect_entries.find(entry => entry.language.name === "en") || ability.flavor_text_entries.find(entry => entry.language.name === "en");
-                return (
-                    <li key={ability.name}>
-                        <Box sx={{display: 'flex', flexDirection: 'row'}}>
-                            <Typography variant={'h3'} className="text-capitalize font-bold">{ability.name}</Typography>
-                            {
-                                ability.pokemon.find(pokemonWithAbility => pokemonWithAbility.pokemon.name === pokemon.name).is_hidden === true
-                                && <small className="text-lowercase font-normal italic"> hidden</small>
-                            }
-                        </Box>
-                        <p>{ability_entry?.short_effect}</p>
-                    </li>)
-            })}
-        </ul>
 
 
-        <Typography variant={"h2"}>Moves</Typography>
-        {tabs.length > 0 ?
-            (<><Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
-                    {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
-                </Tabs>
-            </Box><Box>
-                <ul>
-                    {tabs[currentMoveTab].moves.map(move => (
-                        <li key={move.name}>
-                            <p>{move.name}</p>
-                        </li>)
-                    )}
-                </ul>
-            </Box></>)
-            : <p>Sorry no data at this time</p>
-        }
-    </Layout>)
+            <Typography variant={"h2"}>Moves</Typography>
+            {tabs.length > 0 ?
+                (<>
+                    <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                        <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
+                            {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
+                        </Tabs>
+                    </Box>
+                    <Table>
+                        <TableHead>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Type</TableCell>
+                            <TableCell>Type</TableCell>
+                        </TableHead>
+                        <TableBody>
+                            {tabs[currentMoveTab].moves.map(move => {
+                                    const moveEntry = move.effect_entries.find(entry => entry.language.name === "en") || move.flavor_text_entries.find(entry => entry.language.name === "en");
+                                    const moveName = titleCase(move.name.replace('-', " "));
+
+                                    return (
+                                        <TableRow key={move.name}>
+                                            <TableCell>
+                                                <p>{moveName}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                <p>{titleCase(move.type.name)}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                <p>{moveEntry?.short_effect.replace('$effect_chance', move.effect_chance)}</p>
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                }
+                            )}
+                        </TableBody>
+                    </Table>
+                </>)
+                : <p>Sorry no data at this time</p>
+            }
+        </Layout>
+    )
 }
 
 
