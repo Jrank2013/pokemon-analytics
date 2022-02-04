@@ -177,7 +177,8 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                                                 <p>{moveName}</p>
                                             </TableCell>
                                             <TableCell>
-                                                <p>{titleCase(move.type.name)}</p>
+                                                <Chip key={move.type.name} color="primary" label={titleCase(move.type.name)}
+                                                      sx={{backgroundColor: typeColors[move.type.name]}}/>
                                             </TableCell>
                                             <TableCell>
                                                 <p>{moveEntry?.short_effect.replace('$effect_chance', move.effect_chance)}</p>
