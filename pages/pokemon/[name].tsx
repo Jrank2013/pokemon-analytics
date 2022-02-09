@@ -162,7 +162,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                             <TableRow>
                                 <TableCell>Name</TableCell>
                                 <TableCell>Type</TableCell>
-                                <TableCell>Type</TableCell>
+                                <TableCell>Description</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
