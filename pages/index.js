@@ -1,8 +1,8 @@
-import axios from "axios";
 import Link from 'next/link';
 import Layout from "../components/layout";
+import { pokemon } from "../lib/api";
 
-export default function Home({pokemon}) {
+export default function Home({ pokemon }) {
     return (
         <Layout>
             <h1>Welcome to the premier place for quick pokemon stats analytics</h1>
@@ -16,22 +16,9 @@ export default function Home({pokemon}) {
 
 
 export const getStaticProps = async () => {
-    const pokemon = [];
-    let response;
-    let url = 'https://pokeapi.co/api/v2/pokemon?limit=200';
-
-    do {
-        response = await axios.get(url);
-        if (response.status !== 200) {
-            throw Error(`api raised ${response.status} ${response.statusText}`);
-        }
-        pokemon.push(...response.data.results);
-        url = response.data?.next ?? '';
-    } while (url !== '');
-
 
     return {
-        props: {pokemon}
+        props: { pokemon },
     }
 
 }

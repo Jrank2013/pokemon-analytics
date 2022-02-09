@@ -1,4 +1,4 @@
-const Layout = ({children}) => {
+const Layout = ({ children }) => {
 
     return (<>
         <main className={"m-4"}>{children}</main>

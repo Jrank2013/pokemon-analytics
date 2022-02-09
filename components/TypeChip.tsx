@@ -1,4 +1,4 @@
-import {Chip} from "@mui/material";
+import { Chip } from "@mui/material";
 import titleCase from "voca/title_case";
 import * as React from "react";
 
@@ -27,10 +27,10 @@ interface Props {
     type: string
 }
 
-const TypeChip: React.FC<Props> = ({type}) => {
+const TypeChip: React.FC<Props> = ({ type }) => {
     return (
         <Chip color="primary" label={titleCase(type)}
-              sx={{backgroundColor: typeColors[type]}}/>
+              sx={{ backgroundColor: typeColors[type] }}/>
     )
 }
 

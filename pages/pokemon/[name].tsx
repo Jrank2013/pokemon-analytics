@@ -14,22 +14,22 @@ import {
     TablePagination,
     TableRow,
     Tabs,
-    Typography
+    Typography,
 } from '@mui/material';
 import * as React from "react";
-import {useState} from "react";
-import {getAbility, getMove, getPokemon, pokemon} from "../../lib/api";
+import { useState } from "react";
+import { getAbility, getMove, getPokemon, pokemon } from "../../lib/api";
 import TypeChip from '../../components/TypeChip'
 
 
 import titleCase from 'voca/title_case'
 
 
-export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
+export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM }) {
     const tabs = [
-        {moves: movesByLevelUp, label: "By Level Up"},
-        {moves: movesByBreeding, label: "By Breeding"},
-        {moves: movesByTM, label: "By TM"},
+        { moves: movesByLevelUp, label: "By Level Up" },
+        { moves: movesByBreeding, label: "By Breeding" },
+        { moves: movesByTM, label: "By TM" },
     ].filter(tab => tab.moves?.length ?? 0 > 0)
 
 
@@ -57,7 +57,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                 <title>{titleCase(pokemon.name)}</title>
             </Head>
 
-            <Typography variant="h1" sx={{textTransform: 'capitalize'}}>{pokemon.name}</Typography>
+            <Typography variant="h1" sx={{ textTransform: 'capitalize' }}>{pokemon.name}</Typography>
 
             <div className="flex flex-row ">
                 <div>
@@ -113,7 +113,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                         return (
                             <TableRow key={ability.name}>
                                 <TableCell>
-                                    <Box sx={{display: 'inline'}}>
+                                    <Box sx={{ display: 'inline' }}>
                                         <Typography variant={'h6'}>{abilityName}</Typography>
                                         {isHiddenAbility && <Typography variant={'overline'}> hidden</Typography>}
                                     </Box>
@@ -131,7 +131,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
             <Typography variant={"h2"}>Moves</Typography>
             {tabs.length > 0 ?
                 (<>
-                    <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                         <Tabs value={currentMoveTab} onChange={handleMoveTabChange} aria-label="basic tabs example">
                             {tabs.map((tab) => <Tab key={tab.label} label={tab.label}/>)}
                         </Tabs>
@@ -182,18 +182,18 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
 }
 
 
-export const getStaticProps = async ({params}) => {
+export const getStaticProps = async ({ params }) => {
 
     const pokemon = getPokemon(params.name)
 
     const abilities = await Promise.all(
-        pokemon.abilities.map(async ({ability}) => {
+        pokemon.abilities.map(async ({ ability }) => {
             return getAbility(ability.name)
         }),
     );
 
-    const moves = pokemon?.moves.map(({move, version_group_details}) => {
-        return {...getMove(move.name), version_group_details}
+    const moves = pokemon?.moves.map(({ move, version_group_details }) => {
+        return { ...getMove(move.name), version_group_details }
     }) ?? []
 
     const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0) || []
@@ -206,17 +206,17 @@ export const getStaticProps = async ({params}) => {
 
     return {
         props: {
-            pokemon: {...pokemon, abilities},
+            pokemon: { ...pokemon, abilities },
             movesByLevelUp,
             movesByBreeding,
             movesByTM,
-        }
+        },
     };
 }
 
 export const getStaticPaths = async () => {
     return {
-        paths: pokemon.filter(pokemon => pokemon.is_default).map(pokemon => ({params: {name: pokemon.name}})),
-        fallback: false
+        paths: pokemon.filter(pokemon => pokemon.is_default).map(pokemon => ({ params: { name: pokemon.name } })),
+        fallback: false,
     }
 }
