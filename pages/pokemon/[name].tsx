@@ -4,7 +4,6 @@ import Head from "next/head";
 
 import {
     Box,
-    Chip,
     Stack,
     Tab,
     Table,
@@ -20,31 +19,12 @@ import {
 import * as React from "react";
 import {useState} from "react";
 import {getAbility, getMove, getPokemon, pokemon} from "../../lib/api";
+import TypeChip from '../../components/TypeChip'
 
 
 import titleCase from 'voca/title_case'
 
 
-const typeColors = {
-    'fire': '#fd7d24',
-    'fairy': '#fdb9e9',
-    'grass': '#9bcc50',
-    "normal": "#a4acaf",
-    "fighting": "#d56723",
-    "flying": "#3dc7ef",
-    "poison": "#b97fc9",
-    "ground": "#53a3cf",
-    "rock": "#a38c21",
-    "bug": "#729f3f",
-    "ghost": "#7b62a3",
-    "steel": "#9eb7b8",
-    "water": "#4592c4",
-    "electric": "#eed535",
-    "psychic": "#f366b9",
-    "ice": "#51c4e7",
-    "dragon": "#53a3cf",
-    "dark": "#707070",
-}
 export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, movesByTM}) {
     const tabs = [
         {moves: movesByLevelUp, label: "By Level Up"},
@@ -86,8 +66,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                     <Stack direction="row" spacing={1}>
                         {
                             pokemon.types.map(type => (
-                                    <Chip key={type.type.name} color="primary" label={titleCase(type.type.name)}
-                                          sx={{backgroundColor: typeColors[type.type.name]}}/>
+                                    <TypeChip key={type.type.name} type={type.type.name}/>
                                 )
                             )}
                     </Stack>
@@ -176,8 +155,7 @@ export default function Pokemon({pokemon, movesByLevelUp, movesByBreeding, moves
                                                 <p>{moveName}</p>
                                             </TableCell>
                                             <TableCell>
-                                                <Chip key={move.type.name} color="primary" label={titleCase(move.type.name)}
-                                                      sx={{backgroundColor: typeColors[move.type.name]}}/>
+                                                <TypeChip key={move.type.name} type={move.type.name}/>
                                             </TableCell>
                                             <TableCell>
                                                 <p>{moveEntry?.short_effect.replace('$effect_chance', move.effect_chance)}</p>
