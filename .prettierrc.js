@@ -1,5 +1,4 @@
-
- module.exports = {
+module.exports = {
     trailingComma: "es5",
-     bracketSpacing: true
+    bracketSpacing: true
 }
