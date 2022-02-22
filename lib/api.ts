@@ -4,11 +4,10 @@ import * as fs from "fs";
 const dataDirectory = path.join(process.cwd(), "api-data/data/")
 
 const getAllPokemon = () => {
-    const pokemonLocations = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'api/v2/pokemon/index.json'), { encoding: 'utf-8' })).results
+    const pokemonLocations = JSON.parse(fs.readFileSync(path.join(dataDirectory, 'api/v2/pokemon-species/index.json'), { encoding: 'utf-8' })).results
 
     return pokemonLocations.map(location => {
-
-        return JSON.parse(fs.readFileSync(path.join(dataDirectory, location.url, 'index.json'), { encoding: 'utf-8' }))
+        return JSON.parse(fs.readFileSync(path.join(dataDirectory, location.url.replace('-species',''), 'index.json'), { encoding: 'utf-8' }))
     })
 }
 

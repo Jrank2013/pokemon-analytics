@@ -215,9 +215,8 @@ export const getStaticProps = async ({ params }) => {
 }
 
 export const getStaticPaths = async () => {
-    const defaultPokemon = pokemon.filter(pokemon => pokemon.is_default);
     return {
-        paths: defaultPokemon.map(pokemon => ({ params: { name: pokemon.name } })),
+        paths: pokemon.map(pokemon => ({ params: { name: pokemon.name } })),
         fallback: false,
     }
 }
