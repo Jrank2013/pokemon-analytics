@@ -2,7 +2,8 @@ module.exports = {
   reactStrictMode: true,
   images: {
     domains: [
-        "raw.githubusercontent.com"
-    ]
-  }
+      'raw.githubusercontent.com',
+    ],
+  },
+  distDir: 'build',
 }
