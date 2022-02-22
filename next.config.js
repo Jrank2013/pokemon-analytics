@@ -5,5 +5,4 @@ module.exports = {
       'raw.githubusercontent.com',
     ],
   },
-  distDir: 'build',
 }
