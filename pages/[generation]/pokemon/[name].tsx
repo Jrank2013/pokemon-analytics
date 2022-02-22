@@ -1,4 +1,4 @@
-import Layout from '../../components/layout'
+import Layout from '../../../components/layout'
 import Image from "next/image"
 import Head from "next/head";
 
@@ -18,8 +18,8 @@ import {
 } from '@mui/material';
 import * as React from "react";
 import { useState } from "react";
-import { getAbility, getMove, getPokemon, pokemon } from "../../lib/api";
-import TypeChip from '../../components/TypeChip'
+import { getAbility, getMove, getPokemon, pokemon } from "../../../lib/api";
+import TypeChip from '../../../components/TypeChip'
 
 
 import titleCase from 'voca/title_case'
@@ -67,7 +67,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                         {
                             pokemon.types.map(type => (
                                     <TypeChip key={type.type.name} type={type.type.name}/>
-                                )
+                                ),
                             )}
                     </Stack>
 
@@ -162,7 +162,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                                             </TableCell>
                                         </TableRow>
                                     )
-                                }
+                                },
                             )}
                         </TableBody>
                         <TableFooter>
@@ -182,6 +182,14 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 }
 
 
+const filterMoves = (moves, learnMethod, generation) => {
+    const movesForGeneration = moves.filter(move => move.version_group_details.filter(version => {
+        const versionName = version.version_group.name;
+        return versionName.startsWith(generation) || versionName.endsWith(generation)
+    }).length > 0) || []
+    return movesForGeneration.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === learnMethod).length > 0) || []
+}
+
 export const getStaticProps = async ({ params }) => {
 
     const pokemon = getPokemon(params.name)
@@ -196,13 +204,9 @@ export const getStaticProps = async ({ params }) => {
         return { ...getMove(move.name), version_group_details }
     }) ?? []
 
-    const movesByLevelUp = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'level-up').length > 0) || []
-    const movesByBreeding = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'egg')?.length ?? 0 > 0) || []
-    const movesByTM = moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === 'machine').length > 0) || []
-
-    if (!pokemon.name) {
-        console.log(pokemon)
-    }
+    const movesByLevelUp = filterMoves(moves, 'level-up', params.generation)
+    const movesByBreeding = filterMoves(moves, 'egg', params.generation)
+    const movesByTM = filterMoves(moves, 'machine', params.generation)
 
     return {
         props: {
@@ -215,8 +219,14 @@ export const getStaticProps = async ({ params }) => {
 }
 
 export const getStaticPaths = async () => {
+    const defaultPokemon = pokemon.filter(pokemon => pokemon.is_default);
     return {
-        paths: pokemon.filter(pokemon => pokemon.is_default).map(pokemon => ({ params: { name: pokemon.name } })),
+        paths: defaultPokemon.map(pokemon => pokemon.game_indices.map(generation => ({
+            params: {
+                name: pokemon.name,
+                generation: generation.version.name,
+            },
+        }))).flat(),
         fallback: false,
     }
 }
