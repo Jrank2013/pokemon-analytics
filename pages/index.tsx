@@ -18,7 +18,7 @@ export default function Home({ pokemon }) {
 export const getStaticProps = async () => {
 
     return {
-        props: { ...pokemon.slice(350) },
+        props: { pokemon: [...pokemon.slice(350)] },
     }
 
 }
