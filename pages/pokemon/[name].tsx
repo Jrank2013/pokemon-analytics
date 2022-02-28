@@ -139,6 +139,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                     <Table>
                         <TableHead>
                             <TableRow>
+                                <TableCell>Level</TableCell>
                                 <TableCell>Name</TableCell>
                                 <TableCell>Type</TableCell>
                                 <TableCell>Description</TableCell>
@@ -151,6 +152,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 
                                     return (
                                         <TableRow key={move.name}>
+                                            <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>
                                             <TableCell>
                                                 <p>{moveName}</p>
                                             </TableCell>
@@ -186,6 +188,14 @@ const filterMoves = (moves, learnMethod) => {
     return moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === learnMethod).length > 0) || []
 }
 
+const sortMovesByLevel = (moves) => {
+    return moves.sort((a, b) => {
+        const a_levelLearnedAt = a.version_group_details[0].level_learned_at;
+        const b_levelLearnedAt = b.version_group_details[0].level_learned_at;
+        return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
+    })
+}
+
 export const getStaticProps = async ({ params }) => {
 
     const pokemon = getPokemon(params.name)
@@ -196,9 +206,9 @@ export const getStaticProps = async ({ params }) => {
         }),
     );
 
-    const moves = pokemon?.moves.map(({ move, version_group_details }) => {
+    const moves = sortMovesByLevel(pokemon?.moves.map(({ move, version_group_details }) => {
         return { ...getMove(move.name), version_group_details }
-    }) ?? []
+    }) ?? [])
 
     const movesByLevelUp = filterMoves(moves, 'level-up')
     const movesByBreeding = filterMoves(moves, 'egg')
