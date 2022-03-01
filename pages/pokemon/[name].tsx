@@ -139,7 +139,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Level</TableCell>
+                                {tabs[currentMoveTab].label === "By Level Up" && <TableCell>Level</TableCell>}
                                 <TableCell>Name</TableCell>
                                 <TableCell>Type</TableCell>
                                 <TableCell>Description</TableCell>
@@ -152,7 +152,8 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 
                                     return (
                                         <TableRow key={move.name}>
-                                            <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>
+                                            {tabs[currentMoveTab].label === "By Level Up" &&
+                                                <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>}
                                             <TableCell>
                                                 <p>{moveName}</p>
                                             </TableCell>
