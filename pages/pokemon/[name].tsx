@@ -32,13 +32,13 @@ const filterMovesByVersion = (moves, version) => {
 }
 
 
-export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM }) {
+export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM, availableGens }) {
 
 
     const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
     const [currentMoveTablePage, setCurrentMoveTablePage] = useState<number>(0)
     const [movesPerPage, setMovesPerPage] = useState<number>(10)
-    const [currentVersion, setCurrentVersion] = useState<string>('red-blue')
+    const [currentVersion, setCurrentVersion] = useState<string>(availableGens[0])
 
     const handleMoveTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentMoveTab(newValue);
@@ -59,10 +59,24 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 
     }
 
+    const sortMovesByLevel = React.useCallback((moves) => {
+        return moves.sort((a, b) => {
+            const a_levelLearnedAt = a.version_group_details.find(({ version_group }) => version_group.name === currentVersion).level_learned_at
+            const b_levelLearnedAt = b.version_group_details.find(({ version_group }) => version_group.name === currentVersion).level_learned_at
+            return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
+        })
+    }, [currentMoveTab])
+
     const tabs = [
-        { moves: filterMovesByVersion(movesByLevelUp, currentVersion), label: "By Level Up" },
-        { moves: filterMovesByVersion(movesByBreeding, currentVersion), label: "By Breeding" },
-        { moves: filterMovesByVersion(movesByTM, currentVersion), label: "By TM" },
+        {
+            moves: sortMovesByLevel(filterMovesByVersion(movesByLevelUp, currentVersion)),
+            label: "By Level Up",
+        },
+        {
+            moves: sortMovesByLevel(filterMovesByVersion(movesByBreeding, currentVersion)),
+            label: "By Breeding",
+        },
+        { moves: sortMovesByLevel(filterMovesByVersion(movesByTM, currentVersion)), label: "By TM" },
     ].filter(tab => tab.moves?.length ?? 0 > 0)
 
     return (
@@ -77,8 +91,12 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                     value={currentVersion}
                     onChange={onVersionChange}
                 >
-                    <MenuItem value={"red-blue"}>Red/Blue</MenuItem>
-                    <MenuItem value={"gold-silver"}>Gold/Silver</MenuItem>
+                    {availableGens.map((generation: string) => (
+                        <MenuItem key={generation}
+                                  value={generation}>
+                            {titleCase(generation.replace("-", "/"))}
+                        </MenuItem>
+                    ))}
                 </Select>
             </Box>
 
@@ -177,8 +195,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                                     return (
                                         <TableRow key={move.name}>
                                             {tabs[currentMoveTab].label === "By Level Up" &&
-                                                <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>}
-
+                                                <TableCell>{version_details.level_learned_at}</TableCell>}
                                             <TableCell>
                                                 <p>{moveName}</p>
                                             </TableCell>
@@ -214,14 +231,6 @@ const filterMoves = (moves, learnMethod) => {
     return moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === learnMethod).length > 0) || []
 }
 
-const sortMovesByLevel = (moves) => {
-    return moves.sort((a, b) => {
-        console.log(a.version_group_details[0])
-        const a_levelLearnedAt = a.version_group_details[0].level_learned_at;
-        const b_levelLearnedAt = b.version_group_details[0].level_learned_at;
-        return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
-    })
-}
 
 export const getStaticProps = async ({ params }) => {
 
@@ -233,13 +242,23 @@ export const getStaticProps = async ({ params }) => {
         }),
     );
 
-    const moves = sortMovesByLevel(pokemon?.moves.map(({ move, version_group_details }) => {
+
+    const moves = pokemon.moves.map(({ move, version_group_details }) => {
         return { ...getMove(move.name), version_group_details }
-    }) ?? [])
+    })
 
     const movesByLevelUp = filterMoves(moves, 'level-up')
     const movesByBreeding = filterMoves(moves, 'egg')
     const movesByTM = filterMoves(moves, 'machine')
+
+    const availableGens = new Set<string>()
+
+    pokemon.moves
+        .flatMap(({ version_group_details }) => version_group_details)
+        .map(({ version_group }) => {
+            availableGens.add(version_group.name)
+        })
+
 
     return {
         props: {
@@ -247,6 +266,7 @@ export const getStaticProps = async ({ params }) => {
             movesByLevelUp,
             movesByBreeding,
             movesByTM,
+            availableGens: Array.from(availableGens),
         },
     };
 }
