@@ -4,6 +4,9 @@ import Head from "next/head";
 
 import {
     Box,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
     Stack,
     Tab,
     Table,
@@ -24,18 +27,18 @@ import TypeChip from '../../components/TypeChip'
 
 import titleCase from 'voca/title_case'
 
+const filterMovesByVersion = (moves, version) => {
+    return moves.filter(move => move.version_group_details.filter(version_details => version_details.version_group.name === version).length > 0)
+}
+
 
 export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM }) {
-    const tabs = [
-        { moves: movesByLevelUp, label: "By Level Up" },
-        { moves: movesByBreeding, label: "By Breeding" },
-        { moves: movesByTM, label: "By TM" },
-    ].filter(tab => tab.moves?.length ?? 0 > 0)
 
 
     const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
     const [currentMoveTablePage, setCurrentMoveTablePage] = useState<number>(0)
     const [movesPerPage, setMovesPerPage] = useState<number>(10)
+    const [currentVersion, setCurrentVersion] = useState<string>('red-blue')
 
     const handleMoveTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentMoveTab(newValue);
@@ -51,13 +54,33 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 
     }
 
+    function onVersionChange(event: SelectChangeEvent) {
+        setCurrentVersion(event.target.value)
+
+    }
+
+    const tabs = [
+        { moves: filterMovesByVersion(movesByLevelUp, currentVersion), label: "By Level Up" },
+        { moves: filterMovesByVersion(movesByBreeding, currentVersion), label: "By Breeding" },
+        { moves: filterMovesByVersion(movesByTM, currentVersion), label: "By TM" },
+    ].filter(tab => tab.moves?.length ?? 0 > 0)
+
     return (
         <Layout>
             <Head>
                 <title>{titleCase(pokemon.name)}</title>
             </Head>
 
-            <Typography variant="h1" sx={{ textTransform: 'capitalize' }}>{pokemon.name}</Typography>
+            <Box flex={"row"}>
+                <Typography variant="h1" sx={{ textTransform: 'capitalize' }}>{pokemon.name}</Typography>
+                <Select
+                    value={currentVersion}
+                    onChange={onVersionChange}
+                >
+                    <MenuItem value={"red-blue"}>Red/Blue</MenuItem>
+                    <MenuItem value={"gold-silver"}>Gold/Silver</MenuItem>
+                </Select>
+            </Box>
 
             <div className="flex flex-row ">
                 <div>
@@ -149,11 +172,13 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                             {tabs[currentMoveTab].moves.slice(currentMoveTablePage * movesPerPage, movesPerPage * (currentMoveTablePage + 1)).map(move => {
                                     const moveEntry = move.effect_entries.find(entry => entry.language.name === "en") || move.flavor_text_entries.find(entry => entry.language.name === "en");
                                     const moveName = titleCase(move.name.replace('-', " "));
+                                    const version_details = move.version_group_details.find(version_details => version_details.version_group.name === currentVersion)
 
                                     return (
                                         <TableRow key={move.name}>
                                             {tabs[currentMoveTab].label === "By Level Up" &&
                                                 <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>}
+
                                             <TableCell>
                                                 <p>{moveName}</p>
                                             </TableCell>
@@ -191,6 +216,7 @@ const filterMoves = (moves, learnMethod) => {
 
 const sortMovesByLevel = (moves) => {
     return moves.sort((a, b) => {
+        console.log(a.version_group_details[0])
         const a_levelLearnedAt = a.version_group_details[0].level_learned_at;
         const b_levelLearnedAt = b.version_group_details[0].level_learned_at;
         return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
