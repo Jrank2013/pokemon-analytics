@@ -65,7 +65,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
             const b_levelLearnedAt = b.version_group_details.find(({ version_group }) => version_group.name === currentVersion).level_learned_at
             return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
         })
-    }, [currentMoveTab])
+    }, [currentVersion])
 
     const tabs = [
         {
