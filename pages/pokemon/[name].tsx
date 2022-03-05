@@ -32,6 +32,28 @@ const filterMovesByVersion = (moves, version) => {
 }
 
 
+const generationToDisplayName = {
+    "red-blue": "Red/Blue",
+    "yellow": "Yellow",
+    "gold-silver": "Gold/Silver",
+    "crystal": "Crystal",
+    "ruby-sapphire": "Ruby/Sapphire",
+    "emerald": "Emerald",
+    "firered-leafgreen": "Fire Red/Leaf Green",
+    "diamond-pearl": "Diamond/Pearl",
+    "platinum": "Platinum",
+    "heartgold-soulsilver": "HeartGold/SoulSilver",
+    "black-white": "Black/White",
+    "colosseum": "Colosseum",
+    "xd": "XD",
+    "black-2-white-2": "Black 2/White 2",
+    "x-y": "X/Y",
+    "omega-ruby-alpha-sapphire": "Omega Ruby/Alpha Sapphire",
+    "sun-moon": "Sun/Moon",
+    "ultra-sun-ultra-moon": "Ultra Sun/Ultra Moon",
+}
+
+
 export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM, availableGens }) {
 
 
@@ -94,7 +116,7 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                     {availableGens.map((generation: string) => (
                         <MenuItem key={generation}
                                   value={generation}>
-                            {titleCase(generation.replace("-", "/"))}
+                            {generationToDisplayName[generation]}
                         </MenuItem>
                     ))}
                 </Select>
