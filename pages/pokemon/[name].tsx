@@ -4,6 +4,9 @@ import Head from "next/head";
 
 import {
     Box,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
     Stack,
     Tab,
     Table,
@@ -24,18 +27,40 @@ import TypeChip from '../../components/TypeChip'
 
 import titleCase from 'voca/title_case'
 
+const filterMovesByVersion = (moves, version) => {
+    return moves.filter(move => move.version_group_details.filter(version_details => version_details.version_group.name === version).length > 0)
+}
 
-export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM }) {
-    const tabs = [
-        { moves: movesByLevelUp, label: "By Level Up" },
-        { moves: movesByBreeding, label: "By Breeding" },
-        { moves: movesByTM, label: "By TM" },
-    ].filter(tab => tab.moves?.length ?? 0 > 0)
+
+const generationToDisplayName = {
+    "red-blue": "Red/Blue",
+    "yellow": "Yellow",
+    "gold-silver": "Gold/Silver",
+    "crystal": "Crystal",
+    "ruby-sapphire": "Ruby/Sapphire",
+    "emerald": "Emerald",
+    "firered-leafgreen": "Fire Red/Leaf Green",
+    "diamond-pearl": "Diamond/Pearl",
+    "platinum": "Platinum",
+    "heartgold-soulsilver": "HeartGold/SoulSilver",
+    "black-white": "Black/White",
+    "colosseum": "Colosseum",
+    "xd": "XD",
+    "black-2-white-2": "Black 2/White 2",
+    "x-y": "X/Y",
+    "omega-ruby-alpha-sapphire": "Omega Ruby/Alpha Sapphire",
+    "sun-moon": "Sun/Moon",
+    "ultra-sun-ultra-moon": "Ultra Sun/Ultra Moon",
+}
+
+
+export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, movesByTM, availableGens }) {
 
 
     const [currentMoveTab, setCurrentMoveTab] = useState<number>(0)
     const [currentMoveTablePage, setCurrentMoveTablePage] = useState<number>(0)
     const [movesPerPage, setMovesPerPage] = useState<number>(10)
+    const [currentVersion, setCurrentVersion] = useState<string>(availableGens[0])
 
     const handleMoveTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setCurrentMoveTab(newValue);
@@ -51,13 +76,51 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
 
     }
 
+    function onVersionChange(event: SelectChangeEvent) {
+        setCurrentVersion(event.target.value)
+
+    }
+
+    const sortMovesByLevel = React.useCallback((moves) => {
+        return moves.sort((a, b) => {
+            const a_levelLearnedAt = a.version_group_details.find(({ version_group }) => version_group.name === currentVersion).level_learned_at
+            const b_levelLearnedAt = b.version_group_details.find(({ version_group }) => version_group.name === currentVersion).level_learned_at
+            return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
+        })
+    }, [currentVersion])
+
+    const tabs = [
+        {
+            moves: sortMovesByLevel(filterMovesByVersion(movesByLevelUp, currentVersion)),
+            label: "By Level Up",
+        },
+        {
+            moves: sortMovesByLevel(filterMovesByVersion(movesByBreeding, currentVersion)),
+            label: "By Breeding",
+        },
+        { moves: sortMovesByLevel(filterMovesByVersion(movesByTM, currentVersion)), label: "By TM" },
+    ].filter(tab => tab.moves?.length ?? 0 > 0)
+
     return (
         <Layout>
             <Head>
                 <title>{titleCase(pokemon.name)}</title>
             </Head>
 
-            <Typography variant="h1" sx={{ textTransform: 'capitalize' }}>{pokemon.name}</Typography>
+            <Box flex={"row"}>
+                <Typography variant="h1" sx={{ textTransform: 'capitalize' }}>{pokemon.name}</Typography>
+                <Select
+                    value={currentVersion}
+                    onChange={onVersionChange}
+                >
+                    {availableGens.map((generation: string) => (
+                        <MenuItem key={generation}
+                                  value={generation}>
+                            {generationToDisplayName[generation]}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </Box>
 
             <div className="flex flex-row ">
                 <div>
@@ -149,11 +212,12 @@ export default function Pokemon({ pokemon, movesByLevelUp, movesByBreeding, move
                             {tabs[currentMoveTab].moves.slice(currentMoveTablePage * movesPerPage, movesPerPage * (currentMoveTablePage + 1)).map(move => {
                                     const moveEntry = move.effect_entries.find(entry => entry.language.name === "en") || move.flavor_text_entries.find(entry => entry.language.name === "en");
                                     const moveName = titleCase(move.name.replace('-', " "));
+                                    const version_details = move.version_group_details.find(version_details => version_details.version_group.name === currentVersion)
 
                                     return (
                                         <TableRow key={move.name}>
                                             {tabs[currentMoveTab].label === "By Level Up" &&
-                                                <TableCell>{move.version_group_details[0].level_learned_at}</TableCell>}
+                                                <TableCell>{version_details.level_learned_at}</TableCell>}
                                             <TableCell>
                                                 <p>{moveName}</p>
                                             </TableCell>
@@ -189,13 +253,6 @@ const filterMoves = (moves, learnMethod) => {
     return moves.filter(move => move.version_group_details.filter(version => version.move_learn_method.name === learnMethod).length > 0) || []
 }
 
-const sortMovesByLevel = (moves) => {
-    return moves.sort((a, b) => {
-        const a_levelLearnedAt = a.version_group_details[0].level_learned_at;
-        const b_levelLearnedAt = b.version_group_details[0].level_learned_at;
-        return a_levelLearnedAt === b_levelLearnedAt ? 0 : a_levelLearnedAt > b_levelLearnedAt ? 1 : -1
-    })
-}
 
 export const getStaticProps = async ({ params }) => {
 
@@ -207,13 +264,23 @@ export const getStaticProps = async ({ params }) => {
         }),
     );
 
-    const moves = sortMovesByLevel(pokemon?.moves.map(({ move, version_group_details }) => {
+
+    const moves = pokemon.moves.map(({ move, version_group_details }) => {
         return { ...getMove(move.name), version_group_details }
-    }) ?? [])
+    })
 
     const movesByLevelUp = filterMoves(moves, 'level-up')
     const movesByBreeding = filterMoves(moves, 'egg')
     const movesByTM = filterMoves(moves, 'machine')
+
+    const availableGens = new Set<string>()
+
+    pokemon.moves
+        .flatMap(({ version_group_details }) => version_group_details)
+        .map(({ version_group }) => {
+            availableGens.add(version_group.name)
+        })
+
 
     return {
         props: {
@@ -221,6 +288,7 @@ export const getStaticProps = async ({ params }) => {
             movesByLevelUp,
             movesByBreeding,
             movesByTM,
+            availableGens: Array.from(availableGens),
         },
     };
 }
